@@ -59,18 +59,22 @@ class Block(pygame.sprite.Sprite):
 
 
 class MainHero(pygame.sprite.Sprite):
-    def __init__(self, sheet, columns, rows, x, y):
+    def __init__(self, x, y):
         super().__init__(all_sprites)
+        self.image = load_image('MainHero.png')
+        self.x = x
+        self.y = y
         self.frames = []
-        self.cut_sheet(sheet, columns, rows)
         self.cur_frame = 0
-        self.image = self.frames[self.cur_frame]
-        self.rect = self.rect.move(x, y)
+        self.rect = pygame.Rect(x, y, 64, 47)
         self.mask = pygame.mask.from_surface(self.image)
 
+    def edit(self, sheet, columns, rows):
+        self.image = sheet
+        self.cut_sheet(self.image, columns, rows)
 
     def cut_sheet(self, sheet, columns, rows):
-        self.rect = pygame.Rect(0, 0, sheet.get_width() // columns,
+        self.rect = pygame.Rect(self.x, self.y, sheet.get_width() // columns,
                                 sheet.get_height() // rows)
         for j in range(rows):
             for i in range(columns):
@@ -78,7 +82,11 @@ class MainHero(pygame.sprite.Sprite):
                 self.frames.append(sheet.subsurface(pygame.Rect(
                     frame_location, self.rect.size)))
 
-    def update(self):
+    def warmup(self):
+        self.cur_frame = (self.cur_frame + 1) % len(self.frames)
+        self.image = self.frames[self.cur_frame]
+
+    def move(self):
         self.cur_frame = (self.cur_frame + 1) % len(self.frames)
         self.image = self.frames[self.cur_frame]
 
@@ -86,14 +94,29 @@ class MainHero(pygame.sprite.Sprite):
 if __name__ == '__main__':
     clock = pygame.time.Clock()
     map = Map(21, 20)
-    orc = MainHero(load_image("animation.png"), 7, 1, 600, 468)
+    orc = MainHero(600, 468)
+    shift = 10
     running = True
     c = 1
     c1 = 1
+    a = 0
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
+            key = pygame.key.get_pressed()
+            if key[pygame.K_RIGHT]:
+                orc.edit(load_image('walk1.png'), 7, 1)
+                orc.move()
+                orc.rect.left += shift
+                orc.x += shift
+            if key[pygame.K_LEFT]:
+                orc.edit(load_image('walk2.png'), 7, 1)
+                orc.move()
+                orc.rect.left -= shift
+                orc.x -= shift
+            if key[pygame.K_DOWN]:
+                orc.edit(load_image('MainHero.png'), 1, 1)
         for x in range(map.width):
             c1 = 1
             for y in range(map.height):
@@ -103,5 +126,4 @@ if __name__ == '__main__':
         clock.tick(100)
         SCREEN.fill((0, 0, 0))
         all_sprites.draw(SCREEN)
-        orc.update()
         pygame.display.flip()
