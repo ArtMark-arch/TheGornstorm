@@ -1,6 +1,7 @@
 import pygame
 import os
 import sys
+
 BLOCKS = {
     0: {'name': 'air', 'health': 0, 'sprite': 'air.png'},
     1: {'name': 'grass', 'health': 10, 'sprite': 'grass.png'},
@@ -99,23 +100,22 @@ if __name__ == '__main__':
     running = True
     c = 1
     c1 = 1
-    a = 0
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
             key = pygame.key.get_pressed()
-            if key[pygame.K_RIGHT]:
-                orc.edit(load_image('walk1.png'), 7, 1)
-                orc.move()
+            if key[pygame.K_d]:
                 orc.rect.left += shift
                 orc.x += shift
-            if key[pygame.K_LEFT]:
-                orc.edit(load_image('walk2.png'), 7, 1)
+                orc.edit(load_image('walk1.png'), 7, 1)
                 orc.move()
+            if key[pygame.K_a]:
                 orc.rect.left -= shift
                 orc.x -= shift
-            if key[pygame.K_DOWN]:
+                orc.edit(load_image('walk2.png'), 7, 1)
+                orc.move()
+            if key[pygame.K_s]:
                 orc.edit(load_image('MainHero.png'), 1, 1)
         for x in range(map.width):
             c1 = 1
