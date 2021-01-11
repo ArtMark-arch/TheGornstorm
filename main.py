@@ -36,6 +36,13 @@ def load_image(name, colorkey=None):
     return image
 
 
+image = load_image('background.png')
+background = pygame.sprite.Sprite(all_sprites)
+background.image = image
+background.rect = image.get_rect()
+background.rect.topleft = (1, 1)
+
+
 class Map:
     def __init__(self, width, height):
         self.width = width
