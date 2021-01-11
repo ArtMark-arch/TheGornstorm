@@ -1,16 +1,22 @@
+"""main.py -- отвечает за запуск игры"""
+
+# импорты
 import pygame
 import os
 import sys
 
+# константы
+WIDTH = 1200
+HEIGHT = 600
 BLOCKS = {
-    0: {'name': 'air', 'health': 0, 'sprite': 'air.png'},
-    1: {'name': 'grass', 'health': 10, 'sprite': 'grass.png'},
-    2: {'name': 'ground', 'health': 10, 'sprite': 'ground.png'},
-    3: {'name': 'stone', 'health': 20, 'sprite': 'stone.png'}
+    0: {'name': 'air', 'sprite': 'air.png'},
+    1: {'name': 'grass', 'sprite': 'grass.png'},
+    2: {'name': 'ground', 'sprite': 'ground.png'},
+    3: {'name': 'stone', 'sprite': 'stone.png'}
 }
 all_sprites = pygame.sprite.Group()
 pygame.init()
-SCREEN = pygame.display.set_mode((1200, 600))
+SCREEN = pygame.display.set_mode((WIDTH, HEIGHT))
 
 
 def load_image(name, colorkey=None):
@@ -46,6 +52,7 @@ class Map:
 
 
 class Block(pygame.sprite.Sprite):
+
     def __init__(self, group, id, x, y):
         super().__init__(group)
         self.image = load_image(BLOCKS[id]['sprite'])
@@ -55,22 +62,21 @@ class Block(pygame.sprite.Sprite):
         self.mask = pygame.mask.from_surface(self.image)
         self.rect.bottom = y
 
-    def update(self):
-        pass
 
+class Person(pygame.sprite.Sprite):
 
-class MainHero(pygame.sprite.Sprite):
-    def __init__(self, x, y):
+    def __init__(self, sprite_name, x, y, size):
         super().__init__(all_sprites)
-        self.image = load_image('MainHero.png')
+        self.image = load_image(sprite_name)
         self.x = x
         self.y = y
         self.frames = []
         self.cur_frame = 0
-        self.rect = pygame.Rect(x, y, 64, 47)
+        self.rect = pygame.Rect(x, y, size[0], size[1])
         self.mask = pygame.mask.from_surface(self.image)
 
     def edit(self, sheet, columns, rows):
+        self.frames = []
         self.image = sheet
         self.cut_sheet(self.image, columns, rows)
 
@@ -82,62 +88,49 @@ class MainHero(pygame.sprite.Sprite):
                 frame_location = (self.rect.w * i, self.rect.h * j)
                 self.frames.append(sheet.subsurface(pygame.Rect(
                     frame_location, self.rect.size)))
+
+    def move(self):
+        self.cur_frame = (self.cur_frame + 1) % len(self.frames)
+        self.image = self.frames[self.cur_frame]
+
+
+class MainHero(Person):
 
     def warmup(self):
         self.cur_frame = (self.cur_frame + 1) % len(self.frames)
         self.image = self.frames[self.cur_frame]
 
-    def move(self):
-        self.cur_frame = (self.cur_frame + 1) % len(self.frames)
-        self.image = self.frames[self.cur_frame]
 
-    def edit(self, sheet, columns, rows):
-        self.image = sheet
-        self.cut_sheet(self.image, columns, rows)
+class Skeleton(Person):
 
-
-class Skeleton(pygame.sprite.Sprite):
-    def __init__(self, x, y):
-        super().__init__(all_sprites)
-        self.image = load_image('s_stand.png')
-        self.x = x
-        self.y = y
-        self.frames = []
-        self.cur_frame = 0
-        self.rect = pygame.Rect(x, y, 55, 47)
-        self.mask = pygame.mask.from_surface(self.image)
-
-    def cut_sheet(self, sheet, columns, rows):
-        self.rect = pygame.Rect(self.x, self.y, sheet.get_width() // columns,
-                                sheet.get_height() // rows)
-        for j in range(rows):
-            for i in range(columns):
-                frame_location = (self.rect.w * i, self.rect.h * j)
-                self.frames.append(sheet.subsurface(pygame.Rect(
-                    frame_location, self.rect.size)))
-
-    def move(self):
-        self.cur_frame = (self.cur_frame + 1) % len(self.frames)
-        self.image = self.frames[self.cur_frame]
-
-    def edit(self, sheet, columns, rows):
-        self.image = sheet
-        self.cut_sheet(self.image, columns, rows)
+    def __init__(self, sprite_name, x, y, size):
+        super().__init__(sprite_name, x, y, size)
+        self.attack_range = 20
 
 
 if __name__ == '__main__':
     clock = pygame.time.Clock()
-    map = Map(21, 20)
-    orc = MainHero(600, 468)
-    shift = 10
+    field = Map(21, 20)
+    orc = MainHero("MainHero.png", 600, 468, [64, 47])
+    shift = 10  # шаг орка
     running = True
     c = 1
     c1 = 1
-    enemy = []
+    enemies = []
+    for x in range(field.width):
+        c1 = 1
+        for y in range(field.height):
+            Block(all_sprites, field.field[y][x], c, c1)
+            c1 += 32
+        c += 32
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_w:
+                    enemies.append(Skeleton("s_stand.png", 700, 468, [55, 47]))
+                    print(enemies)
             key = pygame.key.get_pressed()
             if key[pygame.K_d]:
                 orc.rect.left += shift
@@ -151,21 +144,17 @@ if __name__ == '__main__':
                 orc.move()
             if key[pygame.K_s]:
                 orc.edit(load_image('MainHero.png'), 1, 1)
-            if key[pygame.K_w]:
-                enemy.append(Skeleton(700, 468))
-            for item in enemy:
-                if abs(item.x - orc.x) <= 100:
-#                    item.edit(load_image('s_move.png'), 9, 1)
-#                    item.move()
-                    item.rect.left -= 100 * clock.tick() / 1000
-                    item.x -= 100 * clock.tick() / 1000
-        for x in range(map.width):
-            c1 = 1
-            for y in range(map.height):
-                Block(all_sprites, map.field[y][x], c, c1)
-                c1 += 32
-            c += 32
-        clock.tick(100)
+        for enemy in range(len(enemies)):
+            print(enemies[enemy].x, orc.x)
+            if abs(enemies[enemy].x - orc.x) > enemies[enemy].attack_range:
+                enemies[enemy].edit(load_image('s_move.png'), 9, 1)
+                enemies[enemy].move()
+                if enemies[enemy].x > orc.x:
+                    enemies[enemy].rect.left -= shift - 9
+                    enemies[enemy].x -= shift - 9
+                else:
+                    enemies[enemy].rect.left += shift - 9
+                    enemies[enemy].x += shift - 9
         SCREEN.fill((0, 0, 0))
         all_sprites.draw(SCREEN)
         pygame.display.flip()
