@@ -91,6 +91,39 @@ class MainHero(pygame.sprite.Sprite):
         self.cur_frame = (self.cur_frame + 1) % len(self.frames)
         self.image = self.frames[self.cur_frame]
 
+    def edit(self, sheet, columns, rows):
+        self.image = sheet
+        self.cut_sheet(self.image, columns, rows)
+
+
+class Skeleton(pygame.sprite.Sprite):
+    def __init__(self, x, y):
+        super().__init__(all_sprites)
+        self.image = load_image('s_stand.png')
+        self.x = x
+        self.y = y
+        self.frames = []
+        self.cur_frame = 0
+        self.rect = pygame.Rect(x, y, 55, 47)
+        self.mask = pygame.mask.from_surface(self.image)
+
+    def cut_sheet(self, sheet, columns, rows):
+        self.rect = pygame.Rect(self.x, self.y, sheet.get_width() // columns,
+                                sheet.get_height() // rows)
+        for j in range(rows):
+            for i in range(columns):
+                frame_location = (self.rect.w * i, self.rect.h * j)
+                self.frames.append(sheet.subsurface(pygame.Rect(
+                    frame_location, self.rect.size)))
+
+    def move(self):
+        self.cur_frame = (self.cur_frame + 1) % len(self.frames)
+        self.image = self.frames[self.cur_frame]
+
+    def edit(self, sheet, columns, rows):
+        self.image = sheet
+        self.cut_sheet(self.image, columns, rows)
+
 
 if __name__ == '__main__':
     clock = pygame.time.Clock()
@@ -100,6 +133,7 @@ if __name__ == '__main__':
     running = True
     c = 1
     c1 = 1
+    enemy = []
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -117,6 +151,14 @@ if __name__ == '__main__':
                 orc.move()
             if key[pygame.K_s]:
                 orc.edit(load_image('MainHero.png'), 1, 1)
+            if key[pygame.K_w]:
+                enemy.append(Skeleton(700, 468))
+            for item in enemy:
+                if abs(item.x - orc.x) <= 100:
+#                    item.edit(load_image('s_move.png'), 9, 1)
+#                    item.move()
+                    item.rect.left -= 100 * clock.tick() / 1000
+                    item.x -= 100 * clock.tick() / 1000
         for x in range(map.width):
             c1 = 1
             for y in range(map.height):
