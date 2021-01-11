@@ -6,7 +6,8 @@ import os
 import sys
 
 # константы
-WIDTH = 1200
+FPS = 60
+WIDTH = 800
 HEIGHT = 600
 BLOCKS = {
     0: {'name': 'air', 'sprite': 'air.png'},
@@ -108,7 +109,7 @@ class Skeleton(Person):
         self.attack_range = 20
 
 
-if __name__ == '__main__':
+def start_game():
     clock = pygame.time.Clock()
     field = Map(21, 20)
     orc = MainHero("MainHero.png", 600, 468, [64, 47])
@@ -158,3 +159,4 @@ if __name__ == '__main__':
         SCREEN.fill((0, 0, 0))
         all_sprites.draw(SCREEN)
         pygame.display.flip()
+        clock.tick(FPS)

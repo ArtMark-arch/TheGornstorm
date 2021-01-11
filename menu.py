@@ -1,7 +1,10 @@
 """menu.py - отвечает за меню и связку модулей."""
 
+# импорты
 import pygame
 import pygame_gui
+
+from main import start_game
 
 # Константы
 SIZE = WIDTH, HEIGHT = 800, 600
@@ -24,7 +27,7 @@ if __name__ == '__main__':
     pygame.display.set_caption(WINDOW_TITLE)
 
     # Рисование названия
-    font = pygame.font.Font("Fonts/Langar-Regular.ttf", 50)
+    font = pygame.font.Font("Fonts/GothicPixels.ttf", 50)
     text = font.render("The Gornstorm", True, orange)
     text_x = WIDTH // 2 - text.get_width() // 2
     text_y = HEIGHT // 4 - text.get_height() // 2
@@ -37,16 +40,9 @@ if __name__ == '__main__':
         manager=manager
     )
 
-    setting = pygame_gui.elements.UIButton(
-        relative_rect=pygame.Rect(
-            (WIDTH // 2 - btn[0] // 2, HEIGHT // 2 + btn_distance + btn[1] // 2), btn),
-        text="Setting",
-        manager=manager
-    )
-
     off = pygame_gui.elements.UIButton(
         relative_rect=pygame.Rect(
-            (WIDTH // 2 - btn[0] // 2, HEIGHT // 2 + btn_distance * 2 + (btn[1] // 2) * 3), btn),
+            (WIDTH // 2 - btn[0] // 2, HEIGHT // 2 + btn_distance + btn[1] // 2), btn),
         text="Exit",
         manager=manager
     )
@@ -59,6 +55,12 @@ if __name__ == '__main__':
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
+            if event.type == pygame.USEREVENT:
+                if event.user_type == pygame_gui.UI_BUTTON_PRESSED:
+                    if event.ui_element == off:
+                        running = False
+                    if event.ui_element == play:
+                        start_game()
             manager.process_events(event)
         manager.update(FPS / 1000.0)
 
