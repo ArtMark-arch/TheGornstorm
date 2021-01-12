@@ -41,6 +41,7 @@ background = pygame.sprite.Sprite(all_sprites)
 background.image = image
 background.rect = image.get_rect()
 background.rect.topleft = (1, 1)
+clock = pygame.time.Clock()
 
 
 class Map:
@@ -82,6 +83,8 @@ class Person(pygame.sprite.Sprite):
         self.cur_frame = 0
         self.rect = pygame.Rect(x, y, size[0], size[1])
         self.mask = pygame.mask.from_surface(self.image)
+        self.damage = 10
+        self.hp = 100
 
     def edit(self, sheet, columns, rows):
         self.image = sheet
@@ -101,17 +104,31 @@ class Person(pygame.sprite.Sprite):
         self.cur_frame = (self.cur_frame + 1) % len(self.frames)
         self.image = self.frames[self.cur_frame]
 
-    def attack(self):
+    def attack(self, other):
+        other.hp -= self.damage
+
+    def draw_attack(self):
         self.cur_frame = (self.cur_frame + 1) % len(self.frames)
         self.image = self.frames[self.cur_frame]
-
 
 
 class MainHero(Person):
 
+    def __init__(self, sprite_name, x, y, size):
+        super().__init__(sprite_name, x, y, size)
+        self.hp = 300
+        self.damage = 30
+        self.attack_range = 96
+        self.speed = 10
+
     def warmup(self):
         self.cur_frame = (self.cur_frame + 1) % len(self.frames)
         self.image = self.frames[self.cur_frame]
+
+    def draw_attack(self):
+        super().draw_attack()
+        if self.cur_frame == 0:
+            self.edit(load_image("MainHero.png"), 1, 1)
 
 
 class Skeleton(Person):
@@ -119,10 +136,10 @@ class Skeleton(Person):
     def __init__(self, sprite_name, x, y, size):
         super().__init__(sprite_name, x, y, size)
         self.attack_range = 32
+        self.speed = 10
 
 
 def start_game():
-    clock = pygame.time.Clock()
     field = Map(21, 20)
     orc = MainHero("MainHero.png", 600, 468, [64, 47])
     shift = 10  # шаг орка
@@ -144,6 +161,28 @@ def start_game():
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_w:
                     enemies.append(Skeleton("s_stand.png", 700, 468, [55, 47]))
+            if event.type == pygame.USEREVENT + 1:
+                orc.draw_attack()
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if event.button == 1:
+                    for enemy in [e for e in enemies if 0 >= e.x - orc.x >= -orc.attack_range]:
+                        orc.attack(enemy)
+                        if enemy.hp <= 0:
+                            enemy.kill()
+                            enemies.remove(enemy)
+                    orc.edit(load_image("attack1.png"), 6, 1)
+                    orc.draw_attack()
+                    pygame.time.set_timer(pygame.USEREVENT + 1, 100)
+                if event.button == 3:
+                    for enemy in [e for e in enemies if 0 >= orc.x - e.x >= -orc.attack_range]:
+                        orc.attack(enemy)
+                        enemy.speed -= 9
+                        if enemy.hp <= 0:
+                            enemy.kill()
+                            enemies.remove(enemy)
+                    orc.edit(load_image("attack2.png"), 6, 1)
+                    orc.draw_attack()
+                    pygame.time.set_timer(pygame.USEREVENT + 1, 100)
             key = pygame.key.get_pressed()
             if key[pygame.K_d]:
                 orc.rect.left += shift
@@ -172,10 +211,14 @@ def start_game():
             else:
                 if enemies[enemy].x > orc.x:
                     enemies[enemy].edit(load_image('s_attack1.png'), 6, 1)
-                    enemies[enemy].attack()
+                    enemies[enemy].attack(orc)
+                    enemies[enemy].draw_attack()
                 elif enemies[enemy].x < orc.x:
                     enemies[enemy].edit(load_image('s_attack2.png'), 6, 1)
-                    enemies[enemy].attack()
+                    enemies[enemy].attack(orc)
+                    enemies[enemy].draw_attack()
+                if orc.hp <= 0:
+                    running = False
         SCREEN.fill((0, 0, 0))
         all_sprites.draw(SCREEN)
         pygame.display.flip()

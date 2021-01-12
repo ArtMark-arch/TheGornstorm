@@ -9,7 +9,7 @@ from main import start_game
 # Константы
 SIZE = WIDTH, HEIGHT = 800, 600
 WINDOW_TITLE = "The Gornstorm v. pre alpha"
-FPS = 60  # количество кадров в секунду
+FPS = 15  # количество кадров в секунду
 btn = int(25 * WIDTH / 100), int(12.5 * HEIGHT / 100)  # размер кнопки
 btn_distance = int(1 * HEIGHT / 100)  # расстояние между кнопками (1% от высоты окна)
 
