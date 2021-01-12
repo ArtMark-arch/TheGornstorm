@@ -125,12 +125,7 @@ def start_game():
     c = 1
     c1 = 1
     enemies = []
-    for x in range(field.width):
-        c1 = 1
-        for y in range(field.height):
-            Block(all_sprites, field.field[y][x], c, c1)
-            c1 += 32
-        c += 32
+
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -138,7 +133,6 @@ def start_game():
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_w:
                     enemies.append(Skeleton("s_stand.png", 700, 468, [55, 47]))
-                    print(enemies)
             key = pygame.key.get_pressed()
             if key[pygame.K_d]:
                 orc.rect.left += shift
@@ -153,7 +147,6 @@ def start_game():
             if key[pygame.K_s]:
                 orc.edit(load_image('MainHero.png'), 1, 1)
         for enemy in range(len(enemies)):
-            print(enemies[enemy].x, orc.x)
             if abs(enemies[enemy].x - orc.x) > enemies[enemy].attack_range:
                 enemies[enemy].edit(load_image('s_move.png'), 9, 1)
                 enemies[enemy].move()
@@ -163,6 +156,12 @@ def start_game():
                 else:
                     enemies[enemy].rect.left += shift - 9
                     enemies[enemy].x += shift - 9
+        for x in range(field.width):
+            c1 = 1
+            for y in range(field.height):
+                Block(all_sprites, field.field[y][x], c, c1)
+                c1 += 32
+            c += 32
         SCREEN.fill((0, 0, 0))
         all_sprites.draw(SCREEN)
         pygame.display.flip()
