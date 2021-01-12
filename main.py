@@ -6,7 +6,7 @@ import os
 import sys
 
 # константы
-FPS = 60
+FPS = 15
 WIDTH = 800
 HEIGHT = 600
 BLOCKS = {
@@ -84,11 +84,11 @@ class Person(pygame.sprite.Sprite):
         self.mask = pygame.mask.from_surface(self.image)
 
     def edit(self, sheet, columns, rows):
-        self.frames = []
         self.image = sheet
         self.cut_sheet(self.image, columns, rows)
 
     def cut_sheet(self, sheet, columns, rows):
+        self.frames = []
         self.rect = pygame.Rect(self.x, self.y, sheet.get_width() // columns,
                                 sheet.get_height() // rows)
         for j in range(rows):
@@ -100,6 +100,11 @@ class Person(pygame.sprite.Sprite):
     def move(self):
         self.cur_frame = (self.cur_frame + 1) % len(self.frames)
         self.image = self.frames[self.cur_frame]
+
+    def attack(self):
+        self.cur_frame = (self.cur_frame + 1) % len(self.frames)
+        self.image = self.frames[self.cur_frame]
+
 
 
 class MainHero(Person):
@@ -113,7 +118,7 @@ class Skeleton(Person):
 
     def __init__(self, sprite_name, x, y, size):
         super().__init__(sprite_name, x, y, size)
-        self.attack_range = 20
+        self.attack_range = 32
 
 
 def start_game():
@@ -125,6 +130,12 @@ def start_game():
     c = 1
     c1 = 1
     enemies = []
+    for x in range(field.width):
+        c1 = 1
+        for y in range(field.height):
+            Block(all_sprites, field.field[y][x], c, c1)
+            c1 += 32
+        c += 32
 
     while running:
         for event in pygame.event.get():
@@ -148,20 +159,23 @@ def start_game():
                 orc.edit(load_image('MainHero.png'), 1, 1)
         for enemy in range(len(enemies)):
             if abs(enemies[enemy].x - orc.x) > enemies[enemy].attack_range:
-                enemies[enemy].edit(load_image('s_move.png'), 9, 1)
-                enemies[enemy].move()
                 if enemies[enemy].x > orc.x:
-                    enemies[enemy].rect.left -= shift - 9
-                    enemies[enemy].x -= shift - 9
-                else:
-                    enemies[enemy].rect.left += shift - 9
-                    enemies[enemy].x += shift - 9
-        for x in range(field.width):
-            c1 = 1
-            for y in range(field.height):
-                Block(all_sprites, field.field[y][x], c, c1)
-                c1 += 32
-            c += 32
+                    enemies[enemy].edit(load_image('s_walk1.png'), 9, 1)
+                    enemies[enemy].move()
+                    enemies[enemy].rect.left -= shift - 5
+                    enemies[enemy].x -= shift - 5
+                elif enemies[enemy].x < orc.x:
+                    enemies[enemy].edit(load_image('s_walk2.png'), 9, 1)
+                    enemies[enemy].move()
+                    enemies[enemy].rect.left += shift - 5
+                    enemies[enemy].x += shift - 5
+            else:
+                if enemies[enemy].x > orc.x:
+                    enemies[enemy].edit(load_image('s_attack1.png'), 6, 1)
+                    enemies[enemy].attack()
+                elif enemies[enemy].x < orc.x:
+                    enemies[enemy].edit(load_image('s_attack2.png'), 6, 1)
+                    enemies[enemy].attack()
         SCREEN.fill((0, 0, 0))
         all_sprites.draw(SCREEN)
         pygame.display.flip()
