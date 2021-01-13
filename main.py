@@ -174,6 +174,10 @@ def start_game():
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_w:
                     enemies.append(Skeleton("s_stand.png", 700, 468, [55, 47]))
+                if event.key == pygame.K_ESCAPE:
+                    request = esc()
+                    if not request:
+                        running = False
             if event.type == pygame.USEREVENT + 1:
                 orc.draw_attack()
             if event.type == pygame.MOUSEBUTTONDOWN:
@@ -234,6 +238,9 @@ def start_game():
                     health.draw(orc.hp)
                 if orc.hp <= 0:
                     running = False
+                    orc.kill()
+                    for enemy in enemies:
+                        enemy.kill()
         SCREEN.fill((0, 0, 0))
         all_sprites.draw(SCREEN)
         pygame.display.flip()
