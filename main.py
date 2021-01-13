@@ -36,14 +36,6 @@ def load_image(name, colorkey=None):
     return image
 
 
-image = load_image('background.png')
-background = pygame.sprite.Sprite(all_sprites)
-background.image = image
-background.rect = image.get_rect()
-background.rect.topleft = (1, 1)
-clock = pygame.time.Clock()
-
-
 class Map:
     def __init__(self, width, height):
         self.width = width
@@ -136,8 +128,10 @@ class HealthBar(pygame.sprite.Sprite):
         super().__init__(all_sprites)
         self.image = load_image(sprite_name)
         self.rect = pygame.Rect(x, y, size[0], size[1])
+        self.start_hp = hp
 
     def draw(self, hp):
+        pygame.draw.rect(self.image, (0, 0, 0), (18, 4, self.start_hp, 13))
         pygame.draw.rect(self.image, (97, 0, 0), (18, 4, hp, 13))
         pygame.display.flip()
 
@@ -151,6 +145,12 @@ class Skeleton(Person):
 
 
 def start_game():
+    image = load_image('background.png')
+    background = pygame.sprite.Sprite(all_sprites)
+    background.image = image
+    background.rect = image.get_rect()
+    background.rect.topleft = (1, 1)
+    clock = pygame.time.Clock()
     field = Map(21, 20)
     orc = MainHero("MainHero.png", 600, 468, [64, 47])
     health = HealthBar('health_bar.png', 1, 10, (190, 21), orc.hp)
@@ -166,7 +166,6 @@ def start_game():
             Block(all_sprites, field.field[y][x], c, c1)
             c1 += 32
         c += 32
-
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -175,7 +174,11 @@ def start_game():
                 if event.key == pygame.K_w:
                     enemies.append(Skeleton("s_stand.png", 700, 468, [55, 47]))
             if event.type == pygame.USEREVENT + 1:
-                orc.draw_attack()
+                if orc.frames:
+                    orc.draw_attack()
+                else:
+                    pygame.time.set_timer(pygame.USEREVENT + 1, 0)
+                    orc.edit(load_image('MainHero.png'), 1, 1)
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 1:
                     for enemy in [e for e in enemies if 0 >= e.x - orc.x >= -orc.attack_range]:
@@ -185,7 +188,6 @@ def start_game():
                             enemies.remove(enemy)
                     orc.edit(load_image("attack1.png"), 6, 1)
                     orc.draw_attack()
-                    pygame.time.set_timer(pygame.USEREVENT + 1, 100)
                 if event.button == 3:
                     for enemy in [e for e in enemies if 0 >= orc.x - e.x >= -orc.attack_range]:
                         orc.attack(enemy)
@@ -195,7 +197,7 @@ def start_game():
                             enemies.remove(enemy)
                     orc.edit(load_image("attack2.png"), 6, 1)
                     orc.draw_attack()
-                    pygame.time.set_timer(pygame.USEREVENT + 1, 100)
+                pygame.time.set_timer(pygame.USEREVENT + 1, 100)
             key = pygame.key.get_pressed()
             if key[pygame.K_d]:
                 orc.rect.left += shift
@@ -234,6 +236,10 @@ def start_game():
                     health.draw(orc.hp)
                 if orc.hp <= 0:
                     running = False
+                    orc.kill()
+                    for enemy in enemies:
+                        enemy.kill()
+                    orc = MainHero("MainHero.png", 600, 468, [64, 47])
         SCREEN.fill((0, 0, 0))
         all_sprites.draw(SCREEN)
         pygame.display.flip()
