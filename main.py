@@ -64,7 +64,7 @@ class Block(pygame.sprite.Sprite):
         self.rect.bottom = y
 
 
-class Person(pygame.sprite.Sprite):
+class Entity(pygame.sprite.Sprite):
 
     def __init__(self, sprite_name, x, y, size):
         super().__init__(all_sprites)
@@ -104,7 +104,7 @@ class Person(pygame.sprite.Sprite):
         self.image = self.frames[self.cur_frame]
 
 
-class MainHero(Person):
+class MainHero(Entity):
 
     def __init__(self, sprite_name, x, y, size):
         super().__init__(sprite_name, x, y, size)
@@ -112,6 +112,14 @@ class MainHero(Person):
         self.damage = 30
         self.attack_range = 96
         self.speed = 10
+        self.inventory = ['mace', 'bow']
+        self.weapon = 'mace'
+
+    def equip(self):
+        if self.weapon == 'mace':
+            self.weapon = 'bow'
+        else:
+            self.weapon = 'mace'
 
     def warmup(self):
         self.cur_frame = (self.cur_frame + 1) % len(self.frames)
@@ -136,12 +144,31 @@ class HealthBar(pygame.sprite.Sprite):
         pygame.display.flip()
 
 
-class Skeleton(Person):
+class WeaponBar(pygame.sprite.Sprite):
+    def __init__(self, sprite_name, x, y):
+        super().__init__(all_sprites)
+        self.image = load_image(sprite_name)
+        self.rect = pygame.Rect(x, y, 32, 64)
+
+    def edit(self, sheet):
+        self.image = load_image(sheet)
+
+
+class Skeleton(Entity):
 
     def __init__(self, sprite_name, x, y, size):
         super().__init__(sprite_name, x, y, size)
         self.attack_range = 32
         self.speed = 10
+
+
+class Arrow(Entity):
+    def __init__(self, sprite_name, x, y, size, direction):
+        super().__init__(sprite_name, x, y, size)
+        self.damage = 20
+        self.hp = 1
+        self.arrow_shift = 0
+        self.direction = direction
 
 
 def start_game():
@@ -155,11 +182,13 @@ def start_game():
     orc = MainHero("MainHero.png", 600, 468, [64, 47])
     health = HealthBar('health_bar.png', 1, 10, (190, 21), orc.hp)
     health.draw(orc.hp)
+    weapon = WeaponBar('mace_icon.png', 10, 36)
     shift = 10  # шаг орка
     running = True
     c = 1
     c1 = 1
     enemies = []
+    arrows = []
     for x in range(field.width):
         c1 = 1
         for y in range(field.height):
@@ -180,23 +209,40 @@ def start_game():
                     pygame.time.set_timer(pygame.USEREVENT + 1, 0)
                     orc.edit(load_image('MainHero.png'), 1, 1)
             if event.type == pygame.MOUSEBUTTONDOWN:
+                if event.button == 2:
+                    orc.equip()
+                    if orc.weapon == 'mace':
+                        weapon.edit('mace_icon.png')
+                    else:
+                        weapon.edit('bow_icon.png')
                 if event.button == 1:
-                    for enemy in [e for e in enemies if 0 >= e.x - orc.x >= -orc.attack_range]:
-                        orc.attack(enemy)
-                        if enemy.hp <= 0:
-                            enemy.kill()
-                            enemies.remove(enemy)
-                    orc.edit(load_image("attack1.png"), 6, 1)
-                    orc.draw_attack()
+                    if orc.weapon == 'mace':
+                        for enemy in [e for e in enemies if 0 >= e.x - orc.x >= -orc.attack_range]:
+                            orc.attack(enemy)
+                            if enemy.hp <= 0:
+                                enemy.kill()
+                                enemies.remove(enemy)
+                        orc.edit(load_image("attack1.png"), 6, 1)
+                        orc.draw_attack()
+                    if orc.weapon == 'bow':
+                        orc.edit(load_image("shoot1.png"), 10, 1)
+                        orc.draw_attack()
+                        orc.rect.topleft = (orc.x, orc.y - 13)
+                        arrows.append(Arrow('arrow1.png', orc.x, orc.y + 15, (32, 5), 'left'))
                 if event.button == 3:
-                    for enemy in [e for e in enemies if 0 >= orc.x - e.x >= -orc.attack_range]:
-                        orc.attack(enemy)
-                        enemy.speed -= 9
-                        if enemy.hp <= 0:
-                            enemy.kill()
-                            enemies.remove(enemy)
-                    orc.edit(load_image("attack2.png"), 6, 1)
-                    orc.draw_attack()
+                    if orc.weapon == 'mace':
+                        for enemy in [e for e in enemies if 0 >= orc.x - e.x >= -orc.attack_range]:
+                            orc.attack(enemy)
+                            if enemy.hp <= 0:
+                                enemy.kill()
+                                enemies.remove(enemy)
+                        orc.edit(load_image("attack2.png"), 6, 1)
+                        orc.draw_attack()
+                    if orc.weapon == 'bow':
+                        orc.edit(load_image("shoot2.png"), 10, 1)
+                        orc.draw_attack()
+                        arrows.append(Arrow('arrow1.png', orc.x, orc.y + 15, (32, 5), 'right'))
+                        orc.rect.topleft = (orc.x, orc.y - 13)
                 pygame.time.set_timer(pygame.USEREVENT + 1, 100)
             key = pygame.key.get_pressed()
             if key[pygame.K_d]:
@@ -211,6 +257,23 @@ def start_game():
                 orc.move()
             if key[pygame.K_s]:
                 orc.edit(load_image('MainHero.png'), 1, 1)
+            if key[pygame.K_x]:
+                arrows.append(Arrow('arrow2.png', 1, 100, (32, 5)))
+        for arrow in [a for a in arrows]:
+            if arrow.direction == 'right':
+                arrow.rect.left += shift
+                arrow.x += shift
+                arrow.arrow_shift += shift
+                if arrow.arrow_shift >= 800:
+                    arrow.kill()
+                    arrows.remove(arrow)
+            if arrow.direction == 'left':
+                arrow.rect.left -= shift
+                arrow.x += shift
+                arrow.arrow_shift -= shift
+                if arrow.arrow_shift <= -800:
+                    arrow.kill()
+                    arrows.remove(arrow)
         for enemy in range(len(enemies)):
             if abs(enemies[enemy].x - orc.x) > enemies[enemy].attack_range:
                 if enemies[enemy].x > orc.x:
