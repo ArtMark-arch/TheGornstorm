@@ -21,6 +21,32 @@ manager = pygame_gui.UIManager(SIZE, "theme.json")
 # Цвета
 orange = pygame.Color("orange")
 
+
+def esc():
+    back = pygame_gui.elements.UIButton(
+        relative_rect=pygame.Rect((WIDTH // 2 - btn[0] // 2, HEIGHT // 2 - btn[1] // 2), btn),
+        text="Back to play",
+        manager=manager
+    )
+
+    close = pygame_gui.elements.UIButton(
+        relative_rect=pygame.Rect(
+            (WIDTH // 2 - btn[0] // 2, HEIGHT // 2 + btn_distance + btn[1] // 2), btn),
+        text="Exit",
+        manager=manager
+    )
+    while True:
+        for func_event in pygame.event.get():
+            if func_event.type == pygame.QUIT:
+                return False
+            if func_event.type == pygame.USEREVENT:
+                if func_event.user_type == pygame_gui.UI_BUTTON_PRESSED:
+                    if func_event.ui_element == back:
+                        return True
+                    else:
+                        return False
+
+
 if __name__ == '__main__':
     # Настройка окна
     screen = pygame.display.set_mode(SIZE)
@@ -61,6 +87,7 @@ if __name__ == '__main__':
                         running = False
                     if event.ui_element == play:
                         start_game()
+                        screen.fill(pygame.Color((0, 0, 0)))
             manager.process_events(event)
         manager.update(FPS / 1000.0)
 
