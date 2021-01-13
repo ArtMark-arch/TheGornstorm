@@ -83,7 +83,7 @@ class Person(pygame.sprite.Sprite):
         self.cur_frame = 0
         self.rect = pygame.Rect(x, y, size[0], size[1])
         self.mask = pygame.mask.from_surface(self.image)
-        self.damage = 10
+        self.damage = 5
         self.hp = 100
 
     def edit(self, sheet, columns, rows):
@@ -116,7 +116,7 @@ class MainHero(Person):
 
     def __init__(self, sprite_name, x, y, size):
         super().__init__(sprite_name, x, y, size)
-        self.hp = 300
+        self.hp = 153
         self.damage = 30
         self.attack_range = 96
         self.speed = 10
@@ -131,6 +131,17 @@ class MainHero(Person):
             self.edit(load_image("MainHero.png"), 1, 1)
 
 
+class HealthBar(pygame.sprite.Sprite):
+    def __init__(self, sprite_name, x, y, size, hp):
+        super().__init__(all_sprites)
+        self.image = load_image(sprite_name)
+        self.rect = pygame.Rect(x, y, size[0], size[1])
+
+    def draw(self, hp):
+        pygame.draw.rect(self.image, (97, 0, 0), (18, 4, hp, 13))
+        pygame.display.flip()
+
+
 class Skeleton(Person):
 
     def __init__(self, sprite_name, x, y, size):
@@ -142,6 +153,8 @@ class Skeleton(Person):
 def start_game():
     field = Map(21, 20)
     orc = MainHero("MainHero.png", 600, 468, [64, 47])
+    health = HealthBar('health_bar.png', 1, 10, (190, 21), orc.hp)
+    health.draw(orc.hp)
     shift = 10  # шаг орка
     running = True
     c = 1
@@ -213,10 +226,12 @@ def start_game():
                     enemies[enemy].edit(load_image('s_attack1.png'), 6, 1)
                     enemies[enemy].attack(orc)
                     enemies[enemy].draw_attack()
+                    health.draw(orc.hp)
                 elif enemies[enemy].x < orc.x:
                     enemies[enemy].edit(load_image('s_attack2.png'), 6, 1)
                     enemies[enemy].attack(orc)
                     enemies[enemy].draw_attack()
+                    health.draw(orc.hp)
                 if orc.hp <= 0:
                     running = False
         SCREEN.fill((0, 0, 0))
