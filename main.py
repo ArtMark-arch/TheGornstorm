@@ -146,6 +146,7 @@ class Skeleton(Entity):
         self.attack_range = 32
         self.speed = 10
         self.type = 's'
+        self.damage = 30
 
 
 class Bandit(Entity):
@@ -156,6 +157,7 @@ class Bandit(Entity):
         self.speed = 5
         self.hp = 150
         self.type = 'b'
+        self.damage = 45
 
 
 class Arrow(Entity):
@@ -243,12 +245,12 @@ def start_game():
                         orc.rect.topleft = (orc.x, orc.y - 13)
                 pygame.time.set_timer(pygame.USEREVENT + 1, 100)
         key = pygame.key.get_pressed()
-        if key[pygame.K_d]:
+        if key[pygame.K_d] and orc.x + shift <= 750:
             orc.rect.left += shift
             orc.x += shift
             orc.edit(load_image('walk1.png'), 7, 1)
             orc.move()
-        if key[pygame.K_a]:
+        if key[pygame.K_a] and orc.x - shift >= -20:
             orc.rect.left -= shift
             orc.x -= shift
             orc.edit(load_image('walk2.png'), 7, 1)
@@ -316,8 +318,8 @@ def start_game():
                 if orc.hp <= 0:
                     running = False
                     orc.kill()
-                    for enemy in enemies:
-                        enemy.kill()
+                    for en in enemies:
+                        en.kill()
                     orc = MainHero("MainHero.png", 600, 468, [64, 47])
         SCREEN.fill((0, 0, 0))
         all_sprites.draw(SCREEN)
