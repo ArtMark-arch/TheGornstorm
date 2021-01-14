@@ -160,6 +160,17 @@ class Skeleton(Entity):
         super().__init__(sprite_name, x, y, size)
         self.attack_range = 32
         self.speed = 10
+        self.type = 's'
+
+
+class Bandit(Entity):
+
+    def __init__(self, sprite_name, x, y, size):
+        super().__init__(sprite_name, x, y, size)
+        self.attack_range = 64
+        self.speed = 5
+        self.hp = 150
+        self.type = 'b'
 
 
 class Arrow(Entity):
@@ -178,7 +189,7 @@ def start_game():
     background.rect = image.get_rect()
     background.rect.topleft = (1, 1)
     clock = pygame.time.Clock()
-    field = Map(21, 20)
+    field = Map(30, 20)
     orc = MainHero("MainHero.png", 600, 468, [64, 47])
     health = HealthBar('health_bar.png', 1, 10, (190, 21), orc.hp)
     health.draw(orc.hp)
@@ -200,8 +211,10 @@ def start_game():
             if event.type == pygame.QUIT:
                 running = False
             if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_w:
+                if event.key == pygame.K_x:
                     enemies.append(Skeleton("s_stand.png", 700, 468, [55, 47]))
+                if event.key == pygame.K_z:
+                    enemies.append(Bandit("b_stand1.png", 600, 468, [57, 48]))
             if event.type == pygame.USEREVENT + 1:
                 if orc.frames:
                     orc.draw_attack()
@@ -241,7 +254,7 @@ def start_game():
                     if orc.weapon == 'bow':
                         orc.edit(load_image("shoot2.png"), 10, 1)
                         orc.draw_attack()
-                        arrows.append(Arrow('arrow1.png', orc.x, orc.y + 15, (32, 5), 'right'))
+                        arrows.append(Arrow('arrow2.png', orc.x, orc.y + 15, (32, 5), 'right'))
                         orc.rect.topleft = (orc.x, orc.y - 13)
                 pygame.time.set_timer(pygame.USEREVENT + 1, 100)
             key = pygame.key.get_pressed()
@@ -257,8 +270,6 @@ def start_game():
                 orc.move()
             if key[pygame.K_s]:
                 orc.edit(load_image('MainHero.png'), 1, 1)
-            if key[pygame.K_x]:
-                arrows.append(Arrow('arrow2.png', 1, 100, (32, 5)))
         for arrow in [a for a in arrows]:
             if arrow.direction == 'right':
                 arrow.rect.left += shift
@@ -271,29 +282,32 @@ def start_game():
                 arrow.rect.left -= shift
                 arrow.x += shift
                 arrow.arrow_shift -= shift
+                for enemy in enemies:
+                    if enemy.x == arrow.x:
+                        enemy.hp -= arrow.damage
                 if arrow.arrow_shift <= -800:
                     arrow.kill()
                     arrows.remove(arrow)
         for enemy in range(len(enemies)):
             if abs(enemies[enemy].x - orc.x) > enemies[enemy].attack_range:
                 if enemies[enemy].x > orc.x:
-                    enemies[enemy].edit(load_image('s_walk1.png'), 9, 1)
+                    enemies[enemy].edit(load_image(f'{enemies[enemy].type}_walk1.png'), 9, 1)
                     enemies[enemy].move()
                     enemies[enemy].rect.left -= shift - 5
                     enemies[enemy].x -= shift - 5
                 elif enemies[enemy].x < orc.x:
-                    enemies[enemy].edit(load_image('s_walk2.png'), 9, 1)
+                    enemies[enemy].edit(load_image(f'{enemies[enemy].type}_walk2.png'), 9, 1)
                     enemies[enemy].move()
                     enemies[enemy].rect.left += shift - 5
                     enemies[enemy].x += shift - 5
             else:
                 if enemies[enemy].x > orc.x:
-                    enemies[enemy].edit(load_image('s_attack1.png'), 6, 1)
+                    enemies[enemy].edit(load_image(f'{enemies[enemy].type}_attack1.png'), 6, 1)
                     enemies[enemy].attack(orc)
                     enemies[enemy].draw_attack()
                     health.draw(orc.hp)
                 elif enemies[enemy].x < orc.x:
-                    enemies[enemy].edit(load_image('s_attack2.png'), 6, 1)
+                    enemies[enemy].edit(load_image(f'{enemies[enemy].type}_attack2.png'), 6, 1)
                     enemies[enemy].attack(orc)
                     enemies[enemy].draw_attack()
                     health.draw(orc.hp)
