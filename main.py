@@ -1,9 +1,8 @@
 """main.py -- отвечает за запуск игры"""
 
 # импорты
+import random
 import pygame
-import os
-import sys
 from funcs import load_image
 
 # константы
@@ -16,6 +15,11 @@ BLOCKS = {
     2: {'name': 'ground', 'sprite': 'ground.png'},
     3: {'name': 'stone', 'sprite': 'stone.png'}
 }
+WAVES = [
+    {"Skeletons": 5, "Bandits": 0},
+    {"Skeletons": 10, "Bandits": 2},
+    {"Skeletons": 10, "Bandits": 5}
+]
 all_sprites = pygame.sprite.Group()
 pygame.init()
 SCREEN = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -146,7 +150,7 @@ class Skeleton(Entity):
         self.attack_range = 32
         self.speed = 10
         self.type = 's'
-        self.damage = 30
+        self.damage = 9
 
 
 class Bandit(Entity):
@@ -157,7 +161,7 @@ class Bandit(Entity):
         self.speed = 5
         self.hp = 150
         self.type = 'b'
-        self.damage = 45
+        self.damage = 4
 
 
 class Arrow(Entity):
@@ -187,6 +191,7 @@ def start_game():
     c1 = 1
     enemies = []
     arrows = []
+    current_wave = 0  # waves - список, индекс начинается с 0
     for x in range(field.width):
         c1 = 1
         for y in range(field.height):
@@ -197,11 +202,11 @@ def start_game():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_x:
-                    enemies.append(Skeleton("s_stand.png", 700, 468, [55, 47]))
-                if event.key == pygame.K_z:
-                    enemies.append(Bandit("b_stand1.png", 600, 468, [57, 48]))
+            # if event.type == pygame.KEYDOWN:
+            #     if event.key == pygame.K_x:
+            #         enemies.append(Skeleton("s_stand.png", 700, 468, [55, 47]))
+            #     if event.key == pygame.K_z:
+            #         enemies.append(Bandit("b_stand1.png", 600, 468, [57, 48]))
             if event.type == pygame.USEREVENT + 1:
                 if orc.frames:
                     orc.draw_attack()
@@ -321,6 +326,14 @@ def start_game():
                     for en in enemies:
                         en.kill()
                     orc = MainHero("MainHero.png", 600, 468, [64, 47])
+        if not enemies and current_wave < 3:
+            x = 10
+            for skeleton in range(WAVES[current_wave]["Skeletons"]):
+                enemies.append(Skeleton("s_stand.png", random.choice([-40, 840]) - x, 468, [55, 47]))
+                x += 10
+            for bandit in range(WAVES[current_wave]["Bandits"]):
+                enemies.append(Bandit("b_stand1.png", random.choice([-40, 840]) - random.randint(0, 10), 468, [57, 48]))
+            current_wave += 1
         SCREEN.fill((0, 0, 0))
         all_sprites.draw(SCREEN)
         pygame.display.flip()
