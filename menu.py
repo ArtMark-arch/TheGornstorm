@@ -5,6 +5,7 @@ import pygame
 import pygame_gui
 
 from main import start_game
+from funcs import load_image
 
 # Константы
 SIZE = WIDTH, HEIGHT = 800, 600
@@ -17,9 +18,19 @@ btn_distance = int(1 * HEIGHT / 100)  # расстояние между кноп
 pygame.init()
 clock = pygame.time.Clock()
 manager = pygame_gui.UIManager(SIZE, "theme.json")
+all_sprites = pygame.sprite.Group()
 
 # Цвета
 orange = pygame.Color("orange")
+
+
+def draw_our_epic_title():
+    """Рисование названия"""
+    font = pygame.font.Font("Fonts/GothicPixels.ttf", 50)
+    text = font.render("The Gornstorm", True, orange)
+    text_x = WIDTH // 2 - text.get_width() // 2
+    text_y = HEIGHT // 4 - text.get_height() // 2
+    screen.blit(text, (text_x, text_y))
 
 
 if __name__ == '__main__':
@@ -27,12 +38,13 @@ if __name__ == '__main__':
     screen = pygame.display.set_mode(SIZE)
     pygame.display.set_caption(WINDOW_TITLE)
     screen.fill(pygame.Color((0, 0, 0)))
-    # Рисование названия
-    font = pygame.font.Font("Fonts/GothicPixels.ttf", 50)
-    text = font.render("The Gornstorm", True, orange)
-    text_x = WIDTH // 2 - text.get_width() // 2
-    text_y = HEIGHT // 4 - text.get_height() // 2
-    screen.blit(text, (text_x, text_y))
+
+    # Рисование фона
+    background_image = load_image("MainMenu.png")
+    background = pygame.sprite.Sprite(all_sprites)
+    background.image = background_image
+    background.rect = background_image.get_rect()
+    background.rect.topleft = (1, 1)
 
     # Установка кнопок
     play = pygame_gui.elements.UIButton(
@@ -66,10 +78,9 @@ if __name__ == '__main__':
             manager.process_events(event)
         manager.update(FPS / 1000.0)
 
-        # Формирование кадра
-        # ...
-
         # Смена кадра
+        all_sprites.draw(screen)
+        draw_our_epic_title()
         manager.draw_ui(screen)
         pygame.display.flip()
 
