@@ -164,13 +164,29 @@ class Bandit(Entity):
         self.damage = 4
 
 
+class Boss(Entity):
+
+    def __init__(self, sprite_name, x, y, size):
+        super().__init__(sprite_name, x, y, size)
+        self.attack_list = [20, 120, 220, 320, 420, 520, 720, 780]
+        self.hp = 100
+
+
 class Arrow(Entity):
+
     def __init__(self, sprite_name, x, y, size, direction):
         super().__init__(sprite_name, x, y, size)
         self.damage = 20
         self.hp = 1
         self.arrow_shift = 0
         self.direction = direction
+
+
+class Fireball(Entity):
+
+    def __init__(self, sprite_name, x, y, size):
+        super().__init__(sprite_name, x, y, size)
+        self.damage = 20
 
 
 def start_game():
@@ -191,7 +207,11 @@ def start_game():
     c1 = 1
     enemies = []
     arrows = []
-    current_wave = 0  # waves - список, индекс начинается с 0
+    current_wave = 3  # waves - список, индекс начинается с 0
+    pictures = ["Boss.png", "Boss1.png", "Boss2.png", "Boss3.png"]
+    current_pic = 0
+    fireballs = []
+    last_portal_pos = False  # лево, true - право
     for x in range(field.width):
         c1 = 1
         for y in range(field.height):
@@ -202,11 +222,26 @@ def start_game():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
-            # if event.type == pygame.KEYDOWN:
-            #     if event.key == pygame.K_x:
-            #         enemies.append(Skeleton("s_stand.png", 700, 468, [55, 47]))
-            #     if event.key == pygame.K_z:
-            #         enemies.append(Bandit("b_stand1.png", 600, 468, [57, 48]))
+            if event.type == pygame.USEREVENT + 5:
+                portal.kill()
+                portal = Entity("portal1.png", random.choice([-20, 750]), 268, [195, 382])
+                if boss.hp <= 0:
+                    pygame.time.set_timer(pygame.USEREVENT + 5, 0)
+                    pygame.time.set_timer(pygame.USEREVENT + 4, 0)
+                    pygame.time.set_timer(pygame.USEREVENT + 3, 0)
+                    boss.kill()
+                    print("YOUR ARE WINNER!!!")
+                print(boss.hp)
+            if event.type == pygame.USEREVENT + 4:
+                for fire in fireballs:
+                    fire.y += 10
+                    fire.rect.bottom += 10
+            if event.type == pygame.USEREVENT + 3:
+                fireballs.append(Fireball("FireBall.png", random.choice(boss.attack_list), 30, [38, 64]))
+                pygame.time.set_timer(pygame.USEREVENT + 4, 200)
+            if event.type == pygame.USEREVENT + 2:
+                boss.edit(load_image(pictures[current_pic]), 1, 1)
+                current_pic = (current_pic + 1) % len(pictures)
             if event.type == pygame.USEREVENT + 1:
                 if orc.frames:
                     orc.draw_attack()
@@ -293,10 +328,25 @@ def start_game():
                         if arrow in arrows:
                             arrow.kill()
                             arrows.remove(arrow)
+                if any([pygame.sprite.collide_mask(portal, item) for item in arrows]):
+                    arrow.attack(boss)
+                    portal.kill()
+                    if arrow in arrows:
+                        arrow.kill()
+                        arrows.remove(arrow)
                 if arrow.arrow_shift <= -800:
                     if arrow in arrows:
                         arrow.kill()
                         arrows.remove(arrow)
+        for fireball in [x for x in fireballs]:
+            if pygame.sprite.collide_mask(fireball, orc):
+                fireball.attack(orc)
+                health.draw(orc.hp)
+                fireball.kill()
+                fireballs.remove(fireball)
+            if orc.hp <= 0:
+                running = False
+                orc.kill()
         for enemy in range(len(enemies)):
             if abs(enemies[enemy].x - orc.x) > enemies[enemy].attack_range:
                 if enemies[enemy].x > orc.x:
@@ -334,6 +384,12 @@ def start_game():
             for bandit in range(WAVES[current_wave]["Bandits"]):
                 enemies.append(Bandit("b_stand1.png", random.choice([-40, 840]) - random.randint(0, 10), 468, [57, 48]))
             current_wave += 1
+        if current_wave > 2:
+            boss = Boss("Boss.png", 370, 38, [200, 305])
+            pygame.time.set_timer(pygame.USEREVENT + 2, 500)
+            pygame.time.set_timer(pygame.USEREVENT + 3, 800)
+            pygame.time.set_timer(pygame.USEREVENT + 5, 1500)
+            portal = Entity("portal1.png", random.choice([-20, 750]), 268, [195, 382])
         SCREEN.fill((0, 0, 0))
         all_sprites.draw(SCREEN)
         pygame.display.flip()
