@@ -242,19 +242,19 @@ def start_game():
                         arrows.append(Arrow('arrow2.png', orc.x, orc.y + 15, (32, 5), 'right'))
                         orc.rect.topleft = (orc.x, orc.y - 13)
                 pygame.time.set_timer(pygame.USEREVENT + 1, 100)
-            key = pygame.key.get_pressed()
-            if key[pygame.K_d]:
-                orc.rect.left += shift
-                orc.x += shift
-                orc.edit(load_image('walk1.png'), 7, 1)
-                orc.move()
-            if key[pygame.K_a]:
-                orc.rect.left -= shift
-                orc.x -= shift
-                orc.edit(load_image('walk2.png'), 7, 1)
-                orc.move()
-            if key[pygame.K_s]:
-                orc.edit(load_image('MainHero.png'), 1, 1)
+        key = pygame.key.get_pressed()
+        if key[pygame.K_d]:
+            orc.rect.left += shift
+            orc.x += shift
+            orc.edit(load_image('walk1.png'), 7, 1)
+            orc.move()
+        if key[pygame.K_a]:
+            orc.rect.left -= shift
+            orc.x -= shift
+            orc.edit(load_image('walk2.png'), 7, 1)
+            orc.move()
+        if key[pygame.K_s]:
+            orc.edit(load_image('MainHero.png'), 1, 1)
         for arrow in [a for a in arrows]:
             if arrow.direction == 'right':
                 arrow.rect.left += shift
