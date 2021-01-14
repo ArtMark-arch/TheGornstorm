@@ -275,19 +275,36 @@ def start_game():
                 arrow.rect.left += shift
                 arrow.x += shift
                 arrow.arrow_shift += shift
+                for enemy in enemies:
+                    if any([pygame.sprite.collide_mask(enemy, item) for item in arrows]):
+                        enemy.hp -= arrow.damage
+                        if enemy.hp <= 0:
+                            enemy.kill()
+                            enemies.remove(enemy)
+                        if arrow in arrows:
+                            arrow.kill()
+                            arrows.remove(arrow)
                 if arrow.arrow_shift >= 800:
-                    arrow.kill()
-                    arrows.remove(arrow)
+                    if arrow in arrows:
+                        arrow.kill()
+                        arrows.remove(arrow)
             if arrow.direction == 'left':
                 arrow.rect.left -= shift
                 arrow.x += shift
                 arrow.arrow_shift -= shift
                 for enemy in enemies:
-                    if enemy.x == arrow.x:
+                    if any([pygame.sprite.collide_mask(enemy, item) for item in arrows]):
                         enemy.hp -= arrow.damage
+                        if enemy.hp <= 0:
+                            enemy.kill()
+                            enemies.remove(enemy)
+                        if arrow in arrows:
+                            arrow.kill()
+                            arrows.remove(arrow)
                 if arrow.arrow_shift <= -800:
-                    arrow.kill()
-                    arrows.remove(arrow)
+                    if arrow in arrows:
+                        arrow.kill()
+                        arrows.remove(arrow)
         for enemy in range(len(enemies)):
             if abs(enemies[enemy].x - orc.x) > enemies[enemy].attack_range:
                 if enemies[enemy].x > orc.x:
