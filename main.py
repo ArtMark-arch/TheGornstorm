@@ -207,7 +207,7 @@ def start_game():
     c1 = 1
     enemies = []
     arrows = []
-    current_wave = 3  # waves - список, индекс начинается с 0
+    current_wave = 0  # waves - список, индекс начинается с 0
     pictures = ["Boss.png", "Boss1.png", "Boss2.png", "Boss3.png"]
     current_pic = 0
     fireballs = []
@@ -218,13 +218,15 @@ def start_game():
             Block(all_sprites, field.field[y][x], c, c1)
             c1 += 32
         c += 32
+    boss_alive = False  # изначально босса нет
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
             if event.type == pygame.USEREVENT + 5:
-                portal.kill()
-                portal = Entity("portal1.png", random.choice([-20, 750]), 268, [195, 382])
+                if boss_alive:
+                    portal.kill()
+                    portal = Entity("portal1.png", random.choice([-20, 750]), 268, [195, 382])
                 if boss.hp <= 0:
                     pygame.time.set_timer(pygame.USEREVENT + 5, 0)
                     pygame.time.set_timer(pygame.USEREVENT + 4, 0)
@@ -328,12 +330,13 @@ def start_game():
                         if arrow in arrows:
                             arrow.kill()
                             arrows.remove(arrow)
-                if any([pygame.sprite.collide_mask(portal, item) for item in arrows]):
-                    arrow.attack(boss)
-                    portal.kill()
-                    if arrow in arrows:
-                        arrow.kill()
-                        arrows.remove(arrow)
+                if boss_alive:
+                    if any([pygame.sprite.collide_mask(portal, item) for item in arrows]):
+                        arrow.attack(boss)
+                        portal.kill()
+                        if arrow in arrows:
+                            arrow.kill()
+                            arrows.remove(arrow)
                 if arrow.arrow_shift <= -800:
                     if arrow in arrows:
                         arrow.kill()
@@ -385,6 +388,7 @@ def start_game():
                 enemies.append(Bandit("b_stand1.png", random.choice([-40, 840]) - random.randint(0, 10), 468, [57, 48]))
             current_wave += 1
         if current_wave > 2:
+            boss_alive = True
             boss = Boss("Boss.png", 370, 38, [200, 305])
             pygame.time.set_timer(pygame.USEREVENT + 2, 500)
             pygame.time.set_timer(pygame.USEREVENT + 3, 800)
