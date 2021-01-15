@@ -17,12 +17,20 @@ BLOCKS = {
 }
 WAVES = [
     {"Skeletons": 5, "Bandits": 0},
-    {"Skeletons": 10, "Bandits": 2},
-    {"Skeletons": 10, "Bandits": 5}
+    {"Skeletons": 7, "Bandits": 1},
+    {"Skeletons": 7, "Bandits": 1},
+    {"Skeletons": 10, "Bandits": 5},
+    {"Skeletons": 15, "Bandits": 5},
+    {"Skeletons": 15, "Bandits": 7},
+    {"Skeletons": 15, "Bandits": 10},
+    {"Skeletons": 20, "Bandits": 10}
 ]
 all_sprites = pygame.sprite.Group()
 pygame.init()
 SCREEN = pygame.display.set_mode((WIDTH, HEIGHT))
+f2 = pygame.font.SysFont('serif', 48)
+text2 = f2.render("World Мир", False,
+                  (0, 180, 0))
 
 
 class Map:
@@ -98,7 +106,7 @@ class MainHero(Entity):
     def __init__(self, sprite_name, x, y, size):
         super().__init__(sprite_name, x, y, size)
         self.hp = 153
-        self.damage = 30
+        self.damage = 40
         self.attack_range = 96
         self.speed = 10
         self.inventory = ['mace', 'bow']
@@ -150,7 +158,7 @@ class Skeleton(Entity):
         self.attack_range = 32
         self.speed = 10
         self.type = 's'
-        self.damage = 9
+        self.damage = 5
 
 
 class Bandit(Entity):
@@ -161,13 +169,13 @@ class Bandit(Entity):
         self.speed = 5
         self.hp = 150
         self.type = 'b'
-        self.damage = 4
+        self.damage = 1
 
 
 class Arrow(Entity):
     def __init__(self, sprite_name, x, y, size, direction):
         super().__init__(sprite_name, x, y, size)
-        self.damage = 20
+        self.damage = 30
         self.hp = 1
         self.arrow_shift = 0
         self.direction = direction
@@ -202,11 +210,6 @@ def start_game():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
-            # if event.type == pygame.KEYDOWN:
-            #     if event.key == pygame.K_x:
-            #         enemies.append(Skeleton("s_stand.png", 700, 468, [55, 47]))
-            #     if event.key == pygame.K_z:
-            #         enemies.append(Bandit("b_stand1.png", 600, 468, [57, 48]))
             if event.type == pygame.USEREVENT + 1:
                 if orc.frames:
                     orc.draw_attack()
@@ -326,14 +329,14 @@ def start_game():
                     for en in enemies:
                         en.kill()
                     orc = MainHero("MainHero.png", 600, 468, [64, 47])
-        if not enemies and current_wave < 3:
+        if not enemies and current_wave < len(WAVES):
             x = 10
             for skeleton in range(WAVES[current_wave]["Skeletons"]):
                 enemies.append(Skeleton("s_stand.png", random.choice([-40, 840]) - x, 468, [55, 47]))
                 x += 10
             for bandit in range(WAVES[current_wave]["Bandits"]):
                 enemies.append(Bandit("b_stand1.png", random.choice([-40, 840]) - random.randint(0, 10), 468, [57, 48]))
-            current_wave += 1
+        current_wave += 1
         SCREEN.fill((0, 0, 0))
         all_sprites.draw(SCREEN)
         pygame.display.flip()
